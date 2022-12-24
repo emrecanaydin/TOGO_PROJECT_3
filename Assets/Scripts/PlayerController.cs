@@ -9,8 +9,9 @@ public class PlayerController : MonoBehaviour
     public bool start = false;
     public float score;
     public float moveSpeed;
-    public float lastMouseX;
-    public TextMeshProUGUI scoreBoard;
+    public bool isInvisible = false;
+    public TextMeshProUGUI scoreText;
+    public GameObject gameOverPanel;
     Animator playerAnimator;
 
     void Start()
@@ -29,27 +30,6 @@ public class PlayerController : MonoBehaviour
         {
             playerAnimator.SetFloat("Blend", moveSpeed, 0.3f, Time.deltaTime);
             transform.Translate(0, 0, moveSpeed * Time.deltaTime);
-            if (Input.GetButtonDown("Fire1"))
-            {
-                Vector3 mousePos = Input.mousePosition;
-                {
-                    if(mousePos.x > lastMouseX)
-                    {
-                        Debug.Log("right");
-                        transform.position += Vector3.right;
-                    } else
-                    {
-                        Debug.Log("left");
-                        transform.position += Vector3.left;
-                    }
-
-                    var pos = transform.position;
-                    pos.x = Mathf.Clamp(transform.position.x, -1.4f, 1.4f);
-                    transform.position = pos;
-
-                    lastMouseX = mousePos.x;
-                }
-            }
         }
     }
 
@@ -58,8 +38,48 @@ public class PlayerController : MonoBehaviour
         if(other.tag == "Collectable")
         {
             score = score + 5;
-            scoreBoard.text = "Score: " + score;
+            Destroy(other.gameObject, 0f);
+        }
+        if(other.tag == "Enemy")
+        {
+            if (!isInvisible)
+            {
+                score = score - 5;
+                Destroy(other.gameObject, 0f);
+            }
+        }
+        if(other.tag == "FinishLine")
+        {
+            scoreText.text = "Score: " + score;
+            gameOverPanel.SetActive(true);
+            Time.timeScale = 0;
+        }
+        if(other.tag == "InvisibleMaker")
+        {
+            isInvisible = true;
+            Destroy(other.gameObject, 0f);
+            StartCoroutine(MakeUserVisible());
+        }
+        if(other.tag == "Booster")
+        {
+            float defaultSpeed = moveSpeed;
+            moveSpeed = moveSpeed * 2;
+            Destroy(other.gameObject, 0f);
+            StartCoroutine(EndBoosting(defaultSpeed));
         }
     }
+
+    private IEnumerator EndBoosting(float speed)
+    {
+        yield return new WaitForSeconds(2f);
+        moveSpeed = speed;
+    }
+
+    private IEnumerator MakeUserVisible()
+    {
+        yield return new WaitForSeconds(2f);
+        isInvisible = false;
+    }
+
 
 }

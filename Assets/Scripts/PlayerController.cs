@@ -11,12 +11,19 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed;
     public bool isInvisible = false;
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI scoreTextLostPanel;
     public GameObject gameOverPanel;
+    public GameObject lostPanel;
+    public Material invisibleMaterial;
     Animator playerAnimator;
+    Renderer playerRenderer;
+    Material defaultPlayerMaterial;
 
     void Start()
     {
         playerAnimator = GetComponent<Animator>();
+        playerRenderer = transform.GetChild(1).GetComponent<Renderer>();
+        defaultPlayerMaterial = playerRenderer.material;
     }
 
     void Update()
@@ -28,7 +35,7 @@ public class PlayerController : MonoBehaviour
         }
         if (start)
         {
-            playerAnimator.SetFloat("Blend", moveSpeed, 0.3f, Time.deltaTime);
+            playerAnimator.SetFloat("MoveSpeed", moveSpeed);
             transform.Translate(0, 0, moveSpeed * Time.deltaTime);
         }
     }
@@ -51,12 +58,15 @@ public class PlayerController : MonoBehaviour
         if(other.tag == "FinishLine")
         {
             scoreText.text = "Score: " + score;
-            gameOverPanel.SetActive(true);
+            scoreTextLostPanel.text = "Score: " + score;
+            if(score > 0) gameOverPanel.SetActive(true);
+            if (score <= 0) lostPanel.SetActive(true);
             Time.timeScale = 0;
         }
         if(other.tag == "InvisibleMaker")
         {
             isInvisible = true;
+            playerRenderer.material = invisibleMaterial;
             Destroy(other.gameObject, 0f);
             StartCoroutine(MakeUserVisible());
         }
@@ -79,7 +89,7 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(2f);
         isInvisible = false;
+        playerRenderer.material = defaultPlayerMaterial;
     }
-
 
 }
